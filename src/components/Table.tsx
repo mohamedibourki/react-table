@@ -35,14 +35,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DialogDemo } from "./Dialog";
 
 interface IUser {
   id: number;
   name: string;
-  age: number;
-  haveAccess: boolean;
+  username: string;
+  email: string;
+  address: {
+    street: string;
+    suite: string;
+    city: string;
+    zipcode: string;
+    geo: {
+      lat: string;
+      lng: string;
+    };
+  };
+  phone: string;
+  website: string;
+  company: {
+    name: string;
+    catchPhrase: string;
+    bs: string;
+  };
 }
 
 export function DataTable() {
@@ -51,26 +68,19 @@ export function DataTable() {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
   const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
-  const [data, setData] = useState<IUser[]>([
-    {
-      id: 1,
-      name: "John Doe",
-      age: 25,
-      haveAccess: true,
-    },
-    {
-      id: 2,
-      name: "Maxime",
-      age: 30,
-      haveAccess: false,
-    },
-    {
-      id: 3,
-      name: "Amine",
-      age: 28,
-      haveAccess: true,
-    },
-  ]);
+  const [data, setData] = useState<IUser[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await fetch(
+        "https://jsonplaceholder.typicode.com/users"
+      );
+      const result = await response.json();
+      setData(result);
+    };
+
+    fetchData();
+  }, []);
 
   const columns: ColumnDef<IUser>[] = [
     {
@@ -114,7 +124,7 @@ export function DataTable() {
       ),
     },
     {
-      accessorKey: "age",
+      accessorKey: "username",
       header: ({ column }) => {
         return (
           <Button
@@ -122,36 +132,111 @@ export function DataTable() {
             className="px-0"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Age
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div className="lowercase">{row.getValue("age")}</div>,
-    },
-    {
-      accessorKey: "haveAccess",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            className="px-0"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Access
+            username
             <ArrowUpDown />
           </Button>
         );
       },
       cell: ({ row }) => (
-        <div
-          className={`capitalize ${
-            row.getValue("haveAccess") ? "text-green-500" : "text-red-500"
-          }`}
-        >
-          {row.getValue("haveAccess") ? "Yes" : "No"}
-        </div>
+        <div className="lowercase">{row.getValue("username")}</div>
       ),
+    },
+    {
+      accessorKey: "email",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            className="px-0"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            email
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("email")}</div>,
+    },
+    {
+      accessorKey: "address",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            className="px-0"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Street
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const address = row.getValue("address") as { street?: string };
+        return <div>{address?.street}</div>;
+      },
+    },
+    {
+      accessorKey: "address",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          className="px-0"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          City
+          <ArrowUpDown />
+        </Button>
+      ),
+      cell: ({ row }) => {
+        const address = row.getValue("address") as { city?: string };
+        return <div>{address?.city}</div>;
+      },
+    },
+    {
+      accessorKey: "phone",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          className="px-0"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Phone
+          <ArrowUpDown />
+        </Button>
+      ),
+      cell: ({ row }) => <div>{row.getValue("phone")}</div>,
+    },
+    {
+      accessorKey: "website",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          className="px-0"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Website
+          <ArrowUpDown />
+        </Button>
+      ),
+      cell: ({ row }) => <div>{row.getValue("website")}</div>,
+    },
+    {
+      accessorKey: "company",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          className="px-0"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Company Name
+          <ArrowUpDown />
+        </Button>
+      ),
+      cell: ({ row }) => {
+        const company = row.getValue("company") as { name?: string };
+        return <div>{company?.name}</div>;
+      },
     },
     {
       id: "actions",
@@ -326,8 +411,8 @@ export function DataTable() {
           <div>
             <p>ID: {selectedUser?.id}</p>
             <p>Name: {selectedUser?.name}</p>
-            <p>Age: {selectedUser?.age}</p>
-            <p>Have Access: {selectedUser?.haveAccess ? "Yes" : "No"}</p>
+            <p>username: {selectedUser?.username}</p>
+            <p>Email: {selectedUser?.email}</p>
           </div>
         }
         buttonText="Close"
