@@ -37,29 +37,14 @@ import {
 } from "@/components/ui/table";
 import { useEffect, useState } from "react";
 import { DialogDemo } from "./Dialog";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 interface IUser {
   id: number;
   name: string;
-  username: string;
-  email: string;
-  address: {
-    street: string;
-    suite: string;
-    city: string;
-    zipcode: string;
-    geo: {
-      lat: string;
-      lng: string;
-    };
-  };
-  phone: string;
-  website: string;
-  company: {
-    name: string;
-    catchPhrase: string;
-    bs: string;
-  };
+  age: number;
+  haveAccess: boolean;
 }
 
 export function DataTable() {
@@ -70,13 +55,32 @@ export function DataTable() {
   const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
   const [data, setData] = useState<IUser[]>([]);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch(
-        "https://jsonplaceholder.typicode.com/users"
-      );
-      const result = await response.json();
-      setData(result);
+      try {
+        // Get users from localStorage
+        const localUsers = JSON.parse(localStorage.getItem("users") || "[]");
+
+        // Fetch users from API
+        const response = await axios.get(
+          "https://jsonplaceholder.typicode.com/users"
+        );
+
+        // Transform API data to match our interface
+        const apiUsers = response.data.map((user: any) => ({
+          id: user.id,
+          name: user.name,
+          age: Math.floor(Math.random() * 40) + 20, // Random age since API doesn't provide it
+          haveAccess: user.id % 2 === 0,
+        }));
+
+        // Combine local and API users
+        setData([...localUsers, ...apiUsers]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
 
     fetchData();
@@ -124,118 +128,25 @@ export function DataTable() {
       ),
     },
     {
-      accessorKey: "username",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            className="px-0"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            username
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => (
-        <div className="lowercase">{row.getValue("username")}</div>
-      ),
+      accessorKey: "age",
+      header: "Age",
+      cell: ({ row }) => <div>{row.getValue("age")}</div>,
     },
     {
-      accessorKey: "email",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            className="px-0"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            email
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div>{row.getValue("email")}</div>,
-    },
-    {
-      accessorKey: "address",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            className="px-0"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Street
-            <ArrowUpDown />
-          </Button>
-        );
-      },
+      accessorKey: "id",
+      header: "Have access",
       cell: ({ row }) => {
-        const address = row.getValue("address") as { street?: string };
-        return <div>{address?.street}</div>;
-      },
-    },
-    {
-      accessorKey: "address",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          className="px-0"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          City
-          <ArrowUpDown />
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const address = row.getValue("address") as { city?: string };
-        return <div>{address?.city}</div>;
-      },
-    },
-    {
-      accessorKey: "phone",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          className="px-0"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Phone
-          <ArrowUpDown />
-        </Button>
-      ),
-      cell: ({ row }) => <div>{row.getValue("phone")}</div>,
-    },
-    {
-      accessorKey: "website",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          className="px-0"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Website
-          <ArrowUpDown />
-        </Button>
-      ),
-      cell: ({ row }) => <div>{row.getValue("website")}</div>,
-    },
-    {
-      accessorKey: "company",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          className="px-0"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Company Name
-          <ArrowUpDown />
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const company = row.getValue("company") as { name?: string };
-        return <div>{company?.name}</div>;
+        return (
+          <div
+            className={`${
+              (row.getValue("id") as number) % 2 === 0
+                ? "text-green-500"
+                : "text-red-500"
+            }`}
+          >
+            {(row.getValue("id") as number) % 2 === 0 ? "Yes" : "No"}
+          </div>
+        );
       },
     },
     {
@@ -291,6 +202,11 @@ export function DataTable() {
 
   return (
     <div className="w-full">
+      <div className="flex justify-between items-center py-4">
+        <Button onClick={() => navigate("/add-user")} className="mb-4">
+          Add New User
+        </Button>
+      </div>
       <div className="flex items-center py-4">
         <Input
           placeholder="Search users..."
@@ -411,8 +327,8 @@ export function DataTable() {
           <div>
             <p>ID: {selectedUser?.id}</p>
             <p>Name: {selectedUser?.name}</p>
-            <p>username: {selectedUser?.username}</p>
             <p>Email: {selectedUser?.email}</p>
+            <p>Have access: {selectedUser?.haveAccess ? "Yes" : "No"}</p>
           </div>
         }
         buttonText="Close"

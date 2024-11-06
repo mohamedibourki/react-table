@@ -1,9 +1,10 @@
-import { DataTable } from "@/components/Table";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export const Home = () => {
   return (
-    <div className="container mx-auto">
-      <DataTable />
-    </div>
+    <Button asChild className="mb-4">
+      <Link to="/add-user">Ajouter un utilisateur</Link>
+    </Button>
   );
 };
